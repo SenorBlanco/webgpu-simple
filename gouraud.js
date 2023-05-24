@@ -1,10 +1,10 @@
-let vertexShader = `
+let shaders = `
   struct VSInput {
     @location(0) position: vec4<f32>,
     @location(1) color: vec4<f32>
   };
 
-  struct VSOutput {
+  struct Varyings {
     @builtin(position) position: vec4<f32>,
     @location(0) color: vec4<f32>
   };
@@ -22,17 +22,13 @@ let vertexShader = `
   );
 
   @vertex
-  fn main(v : VSInput) -> VSOutput {
-    return VSOutput(
-      v.position,
-      v.color,
-    );
-  }`
+  fn vsMain(v : VSInput) -> Varyings {
+    return Varyings(v.position, v.color);
+  }
 
-let fragmentShader = /* language=WGSL */ `
   @fragment
-  fn main(@location(0) color: vec4<f32>) -> @location(0) vec4<f32> {
-    return color;
+  fn fsMain(v : Varyings) -> @location(0) vec4<f32> {
+    return v.color;
   }`
 
 const render = async (gpu, canvasContext) => {
@@ -59,8 +55,8 @@ const render = async (gpu, canvasContext) => {
   const pipeline = device.createRenderPipeline({
     layout: 'auto',
     vertex: {
-      module: device.createShaderModule({ code: vertexShader }),
-      entryPoint: 'main',
+      module: device.createShaderModule({ code: shaders }),
+      entryPoint: 'vsMain',
       buffers: [
         {
           arrayStride: 8 * 4, // Size in bytes of one triangle vertex
@@ -82,8 +78,8 @@ const render = async (gpu, canvasContext) => {
       ],
     },
     fragment: {
-      module: device.createShaderModule({ code: fragmentShader }),
-      entryPoint: 'main',
+      module: device.createShaderModule({ code: shaders }),
+      entryPoint: 'fsMain',
       targets: [{ format }],
     },
     primitive: { topology: 'triangle-list' },

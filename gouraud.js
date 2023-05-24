@@ -1,4 +1,9 @@
 let vertexShader = `
+  struct VSInput {
+    @location(0) position: vec4<f32>,
+    @location(1) color: vec4<f32>
+  };
+
   struct VSOutput {
     @builtin(position) position: vec4<f32>,
     @location(0) color: vec4<f32>
@@ -17,10 +22,10 @@ let vertexShader = `
   );
 
   @vertex
-  fn main(@builtin(vertex_index) vertexIndex: u32) -> VSOutput {
+  fn main(v : VSInput) -> VSOutput {
     return VSOutput(
-      vec4(positions[vertexIndex], 0.0, 1.0),
-      vec4(colors[vertexIndex], 1.0)
+      v.position,
+      v.color,
     );
   }`
 
@@ -35,11 +40,46 @@ const render = async (gpu, canvasContext) => {
   const device = await (await gpu.requestAdapter()).requestDevice()
   const format = gpu.getPreferredCanvasFormat() // 'bgra8unorm'
   const commandEncoder = device.createCommandEncoder()
+  const verts = new Float32Array([
+     // float4 position, float4 color
+     0.0,  1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
+    -1.0, -1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
+     1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+  ]);
+
+  const vertBuffer = device.createBuffer({
+    size: verts.byteLength,
+    usage: GPUBufferUsage.VERTEX,
+    mappedAtCreation: true,
+  });
+
+  new Float32Array(vertBuffer.getMappedRange()).set(verts);
+  vertBuffer.unmap();
+
   const pipeline = device.createRenderPipeline({
     layout: 'auto',
     vertex: {
       module: device.createShaderModule({ code: vertexShader }),
       entryPoint: 'main',
+      buffers: [
+        {
+          arrayStride: 8 * 4, // Size in bytes of one triangle vertex
+          attributes: [
+            {
+              // position
+              shaderLocation: 0,
+              offset: 0,
+              format: 'float32x4',
+            },
+            {
+              // color
+              shaderLocation: 1,
+              offset: 4 * 4,
+              format: 'float32x4'
+            },
+          ],
+        },
+      ],
     },
     fragment: {
       module: device.createShaderModule({ code: fragmentShader }),
@@ -61,6 +101,7 @@ const render = async (gpu, canvasContext) => {
       },
     ],
   })
+  passEncoder.setVertexBuffer(0, vertBuffer);
   passEncoder.setPipeline(pipeline)
   passEncoder.draw(3, 1, 0, 0)
   passEncoder.end()

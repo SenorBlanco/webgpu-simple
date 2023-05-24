@@ -1,7 +1,7 @@
 let shaders = `
   struct VSInput {
-    @location(0) position: vec4<f32>,
-    @location(1) color: vec4<f32>
+    @location(0) position: vec2<f32>,
+    @location(1) color: vec3<f32>
   };
 
   struct Varyings {
@@ -9,21 +9,9 @@ let shaders = `
     @location(0) color: vec4<f32>
   };
 
-  const positions = array<vec2<f32>,3>(
-    vec2( 0.0,  0.5), 
-    vec2(-0.5, -0.5), 
-    vec2( 0.5, -0.5)
-  );
-
-  const colors = array<vec3<f32>,3>(
-    vec3(0.0, 1.0, 1.0), 
-    vec3(0.0, 0.0, 1.0), 
-    vec3(1.0, 0.0, 1.0)
-  );
-
   @vertex
   fn vsMain(v : VSInput) -> Varyings {
-    return Varyings(v.position, v.color);
+    return Varyings(vec4(v.position, 0.0, 1.0), vec4(v.color, 1.0));
   }
 
   @fragment
@@ -37,10 +25,10 @@ const render = async (gpu, canvasContext) => {
   const format = gpu.getPreferredCanvasFormat() // 'bgra8unorm'
   const commandEncoder = device.createCommandEncoder()
   const verts = new Float32Array([
-     // float4 position, float4 color
-     0.0,  1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
-    -1.0, -1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
-     1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+     // vec2<f32> position, float3<f32> color
+     0.0,  1.0, 1.0, 0.0, 0.0,
+    -1.0, -1.0, 0.0, 1.0, 0.0,
+     1.0, -1.0, 0.0, 0.0, 1.0,
   ]);
 
   const vertBuffer = device.createBuffer({
@@ -59,19 +47,19 @@ const render = async (gpu, canvasContext) => {
       entryPoint: 'vsMain',
       buffers: [
         {
-          arrayStride: 8 * 4, // Size in bytes of one triangle vertex
+          arrayStride: 5 * 4, // Size in bytes of one triangle vertex
           attributes: [
             {
               // position
               shaderLocation: 0,
               offset: 0,
-              format: 'float32x4',
+              format: 'float32x2',
             },
             {
               // color
               shaderLocation: 1,
-              offset: 4 * 4,
-              format: 'float32x4'
+              offset: 2 * 4,
+              format: 'float32x3'
             },
           ],
         },

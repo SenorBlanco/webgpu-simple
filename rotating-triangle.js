@@ -17,8 +17,8 @@ let shaders = `
 
   @vertex
   fn vsMain(v : VSInput) -> Varyings {
-    let p = uniforms.mvpMatrix * vec4(v.position, 0.0, 1.0);
-    return Varyings(p, vec4(v.color, 1.0));
+    let position = uniforms.mvpMatrix * vec4(v.position, 0.0, 1.0);
+    return Varyings(position, vec4(v.color, 1.0));
   }
 
   @fragment
@@ -79,9 +79,8 @@ const initialize = async (gpu, canvasContext) => {
     primitive: { topology: 'triangle-list' },
   })
 
-  const uniformBufferSize = 4 * 20; // 4x4 matrix + alpha
   const uniformBuffer = device.createBuffer({
-    size: uniformBufferSize,
+    size: 4 * 20, // 4x4 matrix + alpha (padded to vec4)
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 

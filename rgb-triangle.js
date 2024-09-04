@@ -9,9 +9,13 @@ let shaders = `
     @location(0) color: vec4<f32>
   };
 
+  fn vsHelper(v : VSInput) -> Varyings {
+    return Varyings(vec4(v.position, 0.0, 1.0), vec4(v.color, 1.0));
+  }
+
   @vertex
   fn vsMain(v : VSInput) -> Varyings {
-    return Varyings(vec4(v.position, 0.0, 1.0), vec4(v.color, 1.0));
+    return vsHelper(v);
   }
 
   @fragment

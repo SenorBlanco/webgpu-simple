@@ -1,0 +1,16 @@
+<canvas id="canvas" width="640" height="480"></canvas>
+<script type="text/javascript">
+const render = async (gpu, canvasContext) => {
+  const device = await (await gpu.requestAdapter()).requestDevice()
+  canvasContext.configure({ device, format: 'rgba8unorm', viewFormats: [ 'r8unorm' ]});
+  const texture = canvasContext.getCurrentTexture();
+}
+if (navigator.gpu) {
+  render(
+    navigator.gpu,
+    document.getElementById('canvas').getContext('webgpu')
+  ).then()
+} else {
+  alert('WebGPU is not supported or is not enabled; see https://webgpu.io')
+}
+</script>
